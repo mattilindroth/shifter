@@ -7,17 +7,16 @@ using System.Threading.Tasks;
 
 namespace Shifter.Model
 {
-    public class WorkshiftTemplate
+    public class Organization
     {
         [Key]
         public int Id { get; set; }
         [Required]
         public string Name { get; set; }
-        public string Description { get; set; }
-        public Organization Organization { get; set; }
-        public ICollection<WorkshiftPart> WorkshiftParts { get; set; }
         [Required]
-        [DefaultValue("false")]
-        public bool IsDeleted { get; set; }
+        public string Description { get; set; }
+        [Required]
+        [DefaultValue("true")]
+        public bool IsActive { get; set; }
     }
 }

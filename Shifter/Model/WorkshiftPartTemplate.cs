@@ -22,5 +22,10 @@ namespace Shifter.Model
         [Required]
         [DefaultValue("CURRENT_TIMESTAMP")]
         public DateTime DefaultStartTime { get; set; }
+        public Organization Organization { get; set; }
+        [Required]
+        [DefaultValue("false")]
+        public bool IsDeleted { get; set; }
+
     }
 }

@@ -10,10 +10,7 @@ namespace Shifter.Model
     {
         [Key]
         public int Id { get; set; }
-        [Required]
-        public string Access { get; set; }
-        [Required]
-        public string Name { get; set; }
-        public string Description { get; set; }
+        public AccessRightsGroup AccessRightGroup { get; set; }
+        public AccessRightTemplate AccessRightTemplate {get; set;}
     }
 }

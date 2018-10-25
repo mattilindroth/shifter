@@ -25,21 +25,17 @@ namespace Shifter.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("Access")
-                        .IsRequired();
+                    b.Property<int?>("AccessRightGroupId");
 
-                    b.Property<int?>("AccessRightsGroupId");
-
-                    b.Property<string>("Description");
-
-                    b.Property<string>("Name")
-                        .IsRequired();
+                    b.Property<int?>("AccessRightTemplateId");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccessRightsGroupId");
+                    b.HasIndex("AccessRightGroupId");
 
-                    b.ToTable("AccessRights");
+                    b.HasIndex("AccessRightTemplateId");
+
+                    b.ToTable("AccessRight");
                 });
 
             modelBuilder.Entity("Shifter.Model.AccessRightsGroup", b =>
@@ -50,9 +46,51 @@ namespace Shifter.Migrations
 
                     b.Property<string>("Name");
 
+                    b.Property<int?>("OrganizationId");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("OrganizationId");
+
                     b.ToTable("AccessRightsGroup");
+                });
+
+            modelBuilder.Entity("Shifter.Model.AccessRightTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Access")
+                        .IsRequired();
+
+                    b.Property<string>("Description");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AccessRightTemplate");
+                });
+
+            modelBuilder.Entity("Shifter.Model.Organization", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("Description")
+                        .IsRequired();
+
+                    b.Property<bool>("IsActive");
+
+                    b.Property<string>("Name")
+                        .IsRequired();
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("Shifter.Model.User", b =>
@@ -69,18 +107,24 @@ namespace Shifter.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired();
 
+                    b.Property<bool>("IsDeleted");
+
                     b.Property<string>("LastName")
                         .IsRequired();
+
+                    b.Property<int>("OrganizationId");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired();
 
-                    b.Property<string>("PasswordSatl")
+                    b.Property<string>("PasswordSalt")
                         .IsRequired();
 
                     b.HasKey("Id");
 
                     b.HasIndex("AccessRightsGroupId");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("Users");
                 });
@@ -91,9 +135,15 @@ namespace Shifter.Migrations
                         .ValueGeneratedOnAdd()
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<bool>("IsDeleted");
+
+                    b.Property<int?>("OrganizationId");
+
                     b.Property<int>("TemplateId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("Workshift");
                 });
@@ -106,6 +156,10 @@ namespace Shifter.Migrations
 
                     b.Property<int>("DurationMinutes");
 
+                    b.Property<bool>("IsDeleted");
+
+                    b.Property<int?>("OrganizationId");
+
                     b.Property<DateTime>("StartTime");
 
                     b.Property<int>("TemplateId");
@@ -113,6 +167,8 @@ namespace Shifter.Migrations
                     b.Property<int?>("WorkshiftTemplateId");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.HasIndex("WorkshiftTemplateId");
 
@@ -131,12 +187,18 @@ namespace Shifter.Migrations
 
                     b.Property<string>("Description");
 
+                    b.Property<bool>("IsDeleted");
+
                     b.Property<bool>("IsWork");
 
                     b.Property<string>("Name")
                         .IsRequired();
 
+                    b.Property<int?>("OrganizationId");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("WorkshiftPartTemplate");
                 });
@@ -149,19 +211,36 @@ namespace Shifter.Migrations
 
                     b.Property<string>("Description");
 
+                    b.Property<bool>("IsDeleted");
+
                     b.Property<string>("Name")
                         .IsRequired();
 
+                    b.Property<int?>("OrganizationId");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("WorkshiftTemplate");
                 });
 
             modelBuilder.Entity("Shifter.Model.AccessRight", b =>
                 {
-                    b.HasOne("Shifter.Model.AccessRightsGroup")
-                        .WithMany("AccessRights")
-                        .HasForeignKey("AccessRightsGroupId");
+                    b.HasOne("Shifter.Model.AccessRightsGroup", "AccessRightGroup")
+                        .WithMany()
+                        .HasForeignKey("AccessRightGroupId");
+
+                    b.HasOne("Shifter.Model.AccessRightTemplate", "AccessRightTemplate")
+                        .WithMany()
+                        .HasForeignKey("AccessRightTemplateId");
+                });
+
+            modelBuilder.Entity("Shifter.Model.AccessRightsGroup", b =>
+                {
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
                 });
 
             modelBuilder.Entity("Shifter.Model.User", b =>
@@ -170,13 +249,43 @@ namespace Shifter.Migrations
                         .WithMany()
                         .HasForeignKey("AccessRightsGroupId")
                         .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Shifter.Model.Workshift", b =>
+                {
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
                 });
 
             modelBuilder.Entity("Shifter.Model.WorkshiftPart", b =>
                 {
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
+
                     b.HasOne("Shifter.Model.WorkshiftTemplate")
                         .WithMany("WorkshiftParts")
                         .HasForeignKey("WorkshiftTemplateId");
+                });
+
+            modelBuilder.Entity("Shifter.Model.WorkshiftPartTemplate", b =>
+                {
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
+                });
+
+            modelBuilder.Entity("Shifter.Model.WorkshiftTemplate", b =>
+                {
+                    b.HasOne("Shifter.Model.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("OrganizationId");
                 });
 #pragma warning restore 612, 618
         }

@@ -9,6 +9,7 @@ namespace Shifter.Model
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public ICollection<AccessRight> AccessRights { get; set; }
+
+        public Organization Organization { get; set; }
     }
 }

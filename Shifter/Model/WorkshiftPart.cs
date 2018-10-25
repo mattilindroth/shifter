@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel;
 
 namespace Shifter.Model
 {
@@ -19,6 +20,10 @@ namespace Shifter.Model
         public DateTime StartTime { get; set; }
 
         [Required]
-        public int DurationMinutes {get; set;}
+        public int DurationMinutes { get; set; }
+        public Organization Organization { get; set; }
+        [Required]
+        [DefaultValue("false")] 
+        public bool IsDeleted { get; set; }
     }
 }
