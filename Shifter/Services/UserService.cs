@@ -26,8 +26,8 @@ namespace Shifter.Services
 
             if (user == null)
                 return null;
-            byte[] passwordHashBytes = System.Text.Encoding.UTF8.GetBytes(user.PasswordHash);
-            byte[] passwordSaltBytes = System.Text.Encoding.UTF8.GetBytes(user.PasswordSalt);
+            byte[] passwordHashBytes = Convert.FromBase64String(user.PasswordHash);
+            byte[] passwordSaltBytes = Convert.FromBase64String(user.PasswordSalt);
             if (!VerifyPasswordHash(password, passwordHashBytes, passwordSaltBytes))
                 return null;
 
@@ -41,17 +41,24 @@ namespace Shifter.Services
 
             CreatePasswordHash(password, out passwordHash, out passwordSalt);
 
-            user.PasswordHash = System.Text.Encoding.UTF8.GetString(passwordHash);
-            user.PasswordSalt = System.Text.Encoding.UTF8.GetString(passwordSalt);
+            user.PasswordHash =  Convert.ToBase64String(passwordHash);
+            user.PasswordSalt = Convert.ToBase64String(passwordSalt);
 
             _dataContext.Users.Add(user);
             _dataContext.SaveChanges();
             return user;
         }
 
-        List<Model.User> GetActiveUsersForOrganization(int OrganizationId)
+        public List<Model.User> GetActiveUsersForOrganization(int OrganizationId)
         {
             return _dataContext.Users.Where(x => x.Organization.Id == OrganizationId && x.IsDeleted == false).ToList();
+        }
+
+        public Model.User GetByOrganizationAndId(int organizatonId, int userId)
+        {
+            var users = from u in _dataContext.Users where u.Organization.Id == organizatonId && u.Id == userId select u;
+            var user = users.FirstOrDefault();
+            return user;
         }
 
         public void Delete(User user)

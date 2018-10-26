@@ -12,6 +12,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Shifter.DataTransferObjects;
 using Shifter.Helpers;
+using AutoMapper;
+using Shifter.Model;
 
 namespace Shifter.Controllers
 {
@@ -23,11 +25,13 @@ namespace Shifter.Controllers
         private IUserService _userService;
         private ILogger<UserController> _logger;
         private IOptions<AppSettings> _appSettings;
-        public UserController(IUserService userService, ILogger<UserController> logger, IOptions<AppSettings> appSettings)
+        private IMapper _mapper;
+        public UserController(IUserService userService, IMapper mapper, ILogger<UserController> logger, IOptions<AppSettings> appSettings)
         {
             _userService = userService;
             _logger = logger;
             _appSettings = appSettings;
+            _mapper = mapper;
         }
 
 
@@ -79,32 +83,77 @@ namespace Shifter.Controllers
                 return BadRequest("Could not find user for Id");
 
             var users = _userService.GetActiveUsersForOrganization(currentUser.Organization.Id);
-            return users;
+            var userDtos = _mapper.Map<List<UserDto>>(users);
+            return Ok(userDtos);
         }
 
         // GET api/values/5
         [HttpGet("{id}")]
-        public ActionResult<string> Get(int id)
+        public IActionResult GetById(int id)
         {
-            return "value";
+            var currentUserIdString = User.FindFirst(ClaimTypes.Name).Value;
+            int currentId = -1;
+            if (!int.TryParse(currentUserIdString, out currentId))
+                return BadRequest("Could not parse current user id to an integer");
+
+            var currentUser = _userService.GetById(currentId);
+            if (currentUser == null)
+                return null;
+
+            var user = _userService.GetById(id);
+            
+            return Ok(User);
         }
 
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpPost("create")]
+        public IActionResult CreateNew([FromBody] UserDto userDto)
         {
+            var user = _mapper.Map<User>(userDto);
+            if(user.Organization == null)
+            {
+                var requestingUserId = User.FindFirst(ClaimTypes.Name).Value;
+                var requestingUser = _userService.GetById(int.Parse(requestingUserId));
+                user.Organization = requestingUser.Organization;
+            }
+            try
+            {
+                _userService.Create(user, userDto.Password);
+                return Ok();
+            }
+            catch(Exception ex)
+            {
+                //Todo log error
+                return BadRequest(new { message = "Could not create new user. " });
+            }
+
         }
 
-        // PUT api/values/5
         [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        public IActionResult Update(int id, [FromBody]UserDto userDto)
         {
+            // map dto to entity and set id
+            var user = _mapper.Map<User>(userDto);
+            user.Id = id;
+
+            try
+            {
+                // save 
+                _userService.Update(user, userDto.Password);
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                // return error message if there was an exception
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
-        // DELETE api/values/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            var user = _userService.GetById(id);
+            _userService.Delete(user);
+            return Ok();
         }
     }
 }
